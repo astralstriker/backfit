@@ -3,11 +3,11 @@ import 'package:http/http.dart';
 import 'package:http/io_client.dart';
 import 'interceptor.dart';
 
-class YoshiClient extends BaseClient {
+class BackfitClient extends BaseClient {
   final Client _inner;
   final List<BaseInterceptor>? interceptors;
   final String? baseUrl;
-  YoshiClient({
+  BackfitClient({
     Client? inner,
     this.interceptors,
     this.baseUrl,

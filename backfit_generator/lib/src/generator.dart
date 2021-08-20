@@ -10,15 +10,15 @@ import 'package:backfit_generator/src/annotations_processor.dart';
 import 'package:backfit_generator/src/type_helper.dart';
 
 Builder backfitGeneratorFactoryBuilder() => SharedPartBuilder(
-      [backfitGenerator()],
-      'backfit',
+      [BackfitGenerator()],
+      'Backfit',
     );
 
 final _annotationsProcessor = AnnotationsProcessor();
 final _dartFmt = DartFormatter();
 String? _baseUrl;
 
-class backfitGenerator extends GeneratorForAnnotation<BackfitService> {
+class BackfitGenerator extends GeneratorForAnnotation<BackfitService> {
   @override
   generateForAnnotatedElement(
       Element element, ConstantReader annotation, BuildStep buildStep) {
@@ -42,13 +42,13 @@ String _generateClass(ClassElement element) {
       ..extend = refer(element.displayName)
       ..mixins.add(refer('_\$${element.name}'))
       ..constructors.add(Constructor(//UnnamedConstructor
-          (cons) => cons..body = Code('_client = backfitClient();')))
+          (cons) => cons..body = Code('_client = BackfitClient();')))
       ..constructors.add(Constructor(
           (cons) => cons // factory constructor for providing own client.
             ..name = 'withClient'
             ..requiredParameters.add(Parameter((p) => p
               ..name = 'client'
-              ..type = refer('backfitClient')))
+              ..type = refer('BackfitClient')))
             ..body = Code('_client = client;')
             ..build())),
   );
@@ -62,7 +62,7 @@ String _generateImplClass(ClassElement element) {
     ..implements.add(refer(element.name))
     ..fields.add(Field((f) => f
       ..name = '_client'
-      ..type = refer('backfitClient?')))
+      ..type = refer('BackfitClient?')))
     ..methods.addAll(_parseMethods(element.methods))
     ..build());
   final emitter = DartEmitter();
