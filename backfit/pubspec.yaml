@@ -1,0 +1,12 @@
+name: backfit
+description: Retrofit inspired HTTP Client generator for Dart
+version: 0.0.1
+author: "Jai Sachdeva"
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+
+dependencies:
+  analyzer: ^2.1.0
+  built_collection: ^5.1.0
+  http: ^0.13.3
