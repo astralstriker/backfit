@@ -1,23 +1,23 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'api.dart';
+part of 'posts_service.dart';
 
 // **************************************************************************
-// YoshiGenerator
+// BackfitGenerator
 // **************************************************************************
 
-class ApiService extends Api with _$Api {
-  ApiService() {
-    _client = YoshiClient();
+class PostsService extends Posts with _$Posts {
+  PostsService() {
+    _client = BackfitClient();
   }
 
-  ApiService.withClient(YoshiClient client) {
+  PostsService.withClient(BackfitClient client) {
     _client = client;
   }
 }
 
-mixin _$Api implements Api {
-  YoshiClient? _client;
+mixin _$Posts implements Posts {
+  BackfitClient? _client;
 
   @override
   Future<Response<List<MyPost>>> postsByUserId(String userId) async {
@@ -25,7 +25,7 @@ mixin _$Api implements Api {
         .get(Uri.parse('${_client!.baseUrl}/posts?userId=$userId'));
 
     return Response(
-      data: res.statusCode == 200
+      data: res.body.isNotEmpty
           ? (json.decode(res.body) as List)
               .map((it) => MyPost.fromJson(it))
               .toList()

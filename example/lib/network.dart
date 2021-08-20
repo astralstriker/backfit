@@ -1,14 +1,8 @@
-import 'package:example/api.dart';
+import 'package:example/posts_service.dart';
 import 'package:backfit/backfit.dart';
 
-final client = YoshiClient(
+final client = BackfitClient(
     baseUrl: 'https://jsonplaceholder.typicode.com',
     interceptors: [HttpLogger()]);
 
-final apiService = ApiService.withClient(client);
-
-
-main(List<String> args) {
-  apiService.postsByUserId('1');
-}
-
+final apiService = PostsService.withClient(client);
