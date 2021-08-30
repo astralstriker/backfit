@@ -1,5 +1,3 @@
-import 'dart:io';
-
 class Response<T> {
   /// The status code of the response.
   final int statusCode;

@@ -31,24 +31,28 @@ class AnnotationsProcessor {
   final _parameterTypeAnnotations = [Body, Query, Path];
 
   ConstantReader getClassAnnotation(ClassElement element) {
-    final annotation =
-        _typeChecker(BackfitService).firstAnnotationOf(element);
+    final annotation = _typeChecker(BackfitService).firstAnnotationOf(element);
     return ConstantReader(annotation);
   }
 
-  List<AnnotatedParam> getMethodAnnotation(MethodElement element, Type type) => element.parameters.map((param) {
-      var annot;
-      ParameterElement? parameter;
-      final a = _typeChecker(type).firstAnnotationOfExact(param);
-      if (annot != null && a != null) {
-        throw Exception(
-            "Too many $type annotations for '${element.getDisplayString(withNullability: false)}");
-      } else if (annot == null && a != null) {
-        annot = a;
-        parameter = param;
-      }
-      return AnnotatedParam(parameter, ConstantReader(annot));
-    }).where((annotation) => annotation.element != null && !annotation.reader.isNull).toList();
+  List<AnnotatedParam> getMethodAnnotation(MethodElement element, Type type) =>
+      element.parameters
+          .map((param) {
+            var annot;
+            ParameterElement? parameter;
+            final a = _typeChecker(type).firstAnnotationOfExact(param);
+            if (annot != null && a != null) {
+              throw Exception(
+                  "Too many $type annotations for '${element.getDisplayString(withNullability: false)}");
+            } else if (annot == null && a != null) {
+              annot = a;
+              parameter = param;
+            }
+            return AnnotatedParam(parameter, ConstantReader(annot));
+          })
+          .where((annotation) =>
+              annotation.element != null && !annotation.reader.isNull)
+          .toList();
 
   Type getMethodType(element) {
     return _methodAnnotations.firstWhere((annotation) {

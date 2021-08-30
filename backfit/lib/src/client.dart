@@ -1,17 +1,17 @@
 import 'dart:convert';
 import 'package:http/http.dart';
-import 'package:http/io_client.dart';
 import 'interceptor.dart';
 
 class BackfitClient extends BaseClient {
   final Client _inner;
   final List<BaseInterceptor>? interceptors;
   final String? baseUrl;
+
   BackfitClient({
     Client? inner,
     this.interceptors,
     this.baseUrl,
-  }) : _inner = inner ?? IOClient();
+  }) : _inner = inner ?? Client();
 
   _interceptResponse(Response response) {
     interceptors?.forEach((interceptor) {

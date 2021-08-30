@@ -9,9 +9,10 @@ import 'package:backfit/backfit.dart';
 import 'package:backfit_generator/src/annotations_processor.dart';
 import 'package:backfit_generator/src/type_helper.dart';
 
-Builder backfitGeneratorFactoryBuilder() => SharedPartBuilder(
+Builder backfitGeneratorFactoryBuilder() => PartBuilder(
       [BackfitGenerator()],
-      'Backfit',
+      '.backfit.dart',
+      header: "// GENERATED CODE - DO NOT MODIFY BY HAND\n"
     );
 
 final _annotationsProcessor = AnnotationsProcessor();

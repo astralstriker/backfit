@@ -1,6 +1,6 @@
 name: backfit_generator
 description: Source code generator for Backfit package.
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/astralstriker/backfit
 
 environment:
@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   analyzer: ^2.1.0
-  backfit: ^0.0.1
+  backfit: ^0.0.2
   build: ^2.1.0
   code_builder: ^4.1.0
   dart_style: ^2.0.3

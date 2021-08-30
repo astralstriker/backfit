@@ -1,11 +1,12 @@
 
 import 'package:backfit/backfit.dart';
+
 import 'my_post.dart';
 
-part 'posts_service.backfit.dart';
+part 'example.backfit.dart';
 
 @BackfitService()
 abstract class Posts {
   @Get('posts')
-  Future<Response<List<MyPost>>> postsByUserId(@Query('userId') String userId); 
+  Future<Response<MyPost>> postsByUserId(@Query('userId') String userId); 
 }

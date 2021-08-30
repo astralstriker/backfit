@@ -38,7 +38,7 @@ Then create an interface annotated with `BackfitService` annotation, it takes ba
 
 import 'package:backfit/backfit.dart';
 
-part 'posts_service.g.dart';
+part 'posts_service.backfit.dart';
 
 @BackfitService()
 abstract class Posts {}
@@ -76,7 +76,7 @@ Now go back to the api_service interface and add an abstract method defining the
 import 'package:backfit/backfit.dart';
 import 'my_post.dart';
 
-part 'posts_service.g.dart';
+part 'posts_service.backfit.dart';
 
 @BackfitService()
 abstract class Posts {
@@ -87,9 +87,18 @@ abstract class Posts {
 ```
 Note that the Response class mentioned here is from `Backfit` and not `http` and as such takes in your Model class as a type parameter for auto parsing.
 
+Now if you are using flutter run -
+  ```
+  flutter pub run build_runner [build|watch] [OPTIONAL --delete-conflicting-outputs]
+  ``` 
+  Or if you are working with dart only run -
+  ```
+  pub run build_runner [build|watch] [OPTIONAL --delete-conflicting-outputs]
+  ``` 
+
 This generates the following code -
 
-`posts_service.g.dart`
+`posts_service.backfit.dart`
 ```dart
 
 // GENERATED CODE - DO NOT MODIFY BY HAND

@@ -1,14 +1,17 @@
 targets:
   $default:
     builders:
-      backfit_generator|backfit:
+      backfit_generator:
         enabled: true
+        generate_for:
+        - example/*
 
 builders:
   backfit_generator:
+    target: ":backfit_generator"
     import: "package:backfit_generator/backfit_generator.dart"
     builder_factories: ["backfitGeneratorFactory"]
-    build_extensions: {".dart": [".backfit.g.part"]}
+    build_extensions: {".dart": [".backfit.dart"]}
     auto_apply: dependents
-    build_to: cache
-    applies_builders: ["source_gen|combining_builder"]
+    build_to: source
+    required_inputs: [".g.part"]
