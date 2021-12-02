@@ -1,19 +1,17 @@
 import 'package:analyzer/dart/element/element.dart';
+import 'package:backfit/backfit.dart';
+import 'package:backfit_generator/src/annotations_processor.dart';
+import 'package:backfit_generator/src/type_helper.dart';
 import 'package:build/build.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:path/path.dart' as path;
 import 'package:source_gen/source_gen.dart';
-import 'package:backfit/backfit.dart';
-import 'package:backfit_generator/src/annotations_processor.dart';
-import 'package:backfit_generator/src/type_helper.dart';
 
-Builder backfitGeneratorFactoryBuilder() => PartBuilder(
-      [BackfitGenerator()],
-      '.backfit.dart',
-      header: "// GENERATED CODE - DO NOT MODIFY BY HAND\n"
-    );
+Builder backfitGeneratorFactoryBuilder() =>
+    PartBuilder([BackfitGenerator()], '.backfit.dart',
+        header: "// GENERATED CODE - DO NOT MODIFY BY HAND\n");
 
 final _annotationsProcessor = AnnotationsProcessor();
 final _dartFmt = DartFormatter();
@@ -61,9 +59,24 @@ String _generateImplClass(ClassElement element) {
   final backfit = Class((c) => c
     ..name = '_\$${element.name}'
     ..implements.add(refer(element.name))
-    ..fields.add(Field((f) => f
-      ..name = '_client'
-      ..type = refer('BackfitClient?')))
+    ..fields.addAll([
+      Field((f) => f
+        ..name = '_client'
+        ..type = refer('BackfitClient?')),
+      Field((f) => f
+        ..name = '_validStatuses'
+        ..type = refer('List<int>')
+        ..modifier = FieldModifier.final$
+        ..assignment = Code('''
+  [
+    HttpStatus.ok,
+    HttpStatus.created,
+    HttpStatus.accepted,
+    HttpStatus.nonAuthoritativeInformation,
+    HttpStatus.partialContent,
+  ]
+      '''))
+    ])
     ..methods.addAll(_parseMethods(element.methods))
     ..build());
   final emitter = DartEmitter();
@@ -88,9 +101,13 @@ Method _parseMethod(MethodElement element) => Method((b) => b
 Code _parseBody(MethodElement element) {
   final _methodAnnotation = _annotationsProcessor.getMethodAnnotations(element);
 
+  if (_methodAnnotation.any((e) => e?.type == Multipart)) {
+    return _parseMultipart(element);
+  }
+
   Type methodType = _annotationsProcessor.getMethodType(element);
 
-  String url = 'adfad';
+  String url = '';
   String method = 'post';
 
   if (methodType == Get) {
@@ -164,7 +181,7 @@ Code _parseBody(MethodElement element) {
 
   if (!doesReturnCall) {
     throw InvalidGenerationSourceError(
-        'Should return Call ---- \n\n $_typeArgs');
+        'Should return Response ---- \n\n $_typeArgs');
   }
 
   final _retType = _typeArgs.elementAt(2);
@@ -203,7 +220,7 @@ Code _parseBody(MethodElement element) {
 final res = await _client!.$method(Uri.parse(\'$url\')$_postBody);
 
 return ${_typeArgs.elementAt(1).name}(
-    data: res.body.isNotEmpty ? $data : null,
+    data: _validStatuses.contains(res.statusCode) && res.body.isNotEmpty ?  $data : null,
     statusCode: res.statusCode,
     reasonPhrase: res.reasonPhrase,
     headers: HttpHeaders.fromMap(res.headers),
@@ -215,7 +232,7 @@ return ${_typeArgs.elementAt(1).name}(
     sb.write('''
 final res = await _client!.$method(Uri.parse(\'$url\')$_postBody);
 return ${_typeArgs.elementAt(1).name}(
-    data: res.body.isNotEmpty ? $data : null,
+    data: _validStatuses.contains(res.statusCode) && res.body.isNotEmpty ? $data : null,
     statusCode: res.statusCode,
     reasonPhrase: res.reasonPhrase,
     headers: HttpHeaders.fromMap(res.headers),
@@ -232,13 +249,122 @@ return ${_typeArgs.elementAt(1).name}(
     sb.write('''
 final res = await _client!.$method(Uri.parse(\'$url\')$_postBody);
 return ${_typeArgs.elementAt(1).name}(
-    data: res.body.isNotEmpty ? $data : null,
+    data:  _validStatuses.contains(res.statusCode) && res.body.isNotEmpty ?  $data : null,
     statusCode: res.statusCode,
     reasonPhrase: res.reasonPhrase,
     headers: HttpHeaders.fromMap(res.headers),
   );
 ''');
   }
+  return Code(sb.toString());
+}
+
+Code _parseMultipart(MethodElement element) {
+  final _methodAnnotation = _annotationsProcessor.getMethodAnnotations(element);
+
+  String url = path.url.join(
+      "\${_client!.baseUrl}",
+      _baseUrl ?? "",
+      _methodAnnotation
+          .firstWhere((annotation) => annotation?.type == Post,
+              orElse: () => null)
+          ?.reader
+          .peek('url')
+          ?.stringValue);
+
+  final sb = StringBuffer();
+
+  final _typeArgs = typeArgs(element.returnType);
+  final _retType = _typeArgs.elementAt(2);
+  final pathParams = _annotationsProcessor.getMethodAnnotation(element, Path);
+
+  final type = _typeArgs.last;
+  final needDeserialization = needsDeserialization(type);
+
+  if (needDeserialization) {
+    final fromJsonElement =
+        (type.element as ClassElement?)?.getNamedConstructor('fromJson') ??
+            (type.element as ClassElement)
+                .lookUpConcreteMethod('fromJson', type.element!.library!);
+
+    if (fromJsonElement == null) {
+      throw InvalidGenerationSourceError(
+          'Class ${type.element!.name} must implement factory or '
+          'static method fromJson to convert map data into ${type.element!.name} object');
+    }
+  }
+  pathParams.forEach((p) {
+    final pathId = p.reader.peek('path')?.stringValue;
+    final pathParam = p.element?.name;
+
+    url = url.replaceAll('{$pathId}', '\$$pathParam');
+  });
+
+  sb.write("""
+    final request = MultipartRequest('POST', Uri.parse(\'$url\'));
+  """);
+  final fileParams =
+      _annotationsProcessor.getMethodAnnotation(element, PartFile);
+
+  fileParams.forEach((f) {
+    final field = f.reader.peek('field')?.stringValue;
+    final contentType = f.reader.peek('contentType')?.stringValue.split("/");
+    final filePath = f.element?.name;
+    if (f.element!.type.isDartCoreList) {
+      sb.writeln("for (final _\$x in $filePath) {");
+      sb.writeln(
+          "request.files.add(await MultipartFile.fromPath('$field', _\$x.path, contentType: MediaType('${contentType![0]}', '${contentType[1]}')));");
+      sb.writeln("}");
+    } else {
+      sb.writeln(
+          "request.files.add(await MultipartFile.fromPath('$field', $filePath.path, contentType: MediaType('${contentType![0]}', '${contentType[1]}')));");
+    }
+  });
+
+  final fieldParams =
+      _annotationsProcessor.getMethodAnnotation(element, PartField);
+  fieldParams.forEach((f) {
+    final field = f.reader.peek('field')?.stringValue;
+    final value = f.element?.name;
+    sb.writeln("request.fields['$field'] = $value;");
+  });
+
+  var data;
+
+  if (coreIterableTypeChecker.isAssignableFromType(_retType)) {
+    data = '(json.decode(data) as List)';
+
+    if (!type.isDynamic) {
+      data = "$data.map((it) => $type.fromJson(it))";
+    }
+
+    if (_retType.isDartCoreList) {
+      data = "$data.toList()";
+    } else if (_retType.isDartCoreSet) {
+      data = "$data.toSet()";
+    }
+  } else if (coreMapTypeChecker.isAssignableFromType(_retType)) {
+    data = '(json.decode(data) as Map)';
+  } else {
+    if (_typeArgs.length > 4) {
+      throw InvalidGenerationSourceError(
+          "Only upto 4 levels of depth in the return type of a call is supported.. \ne.g., Future<Call<List<List<T>>>> is not supported");
+    }
+    data = 'json.decode(data)';
+    if (!type.isDynamic) data = '${type.name}.fromJson($data)';
+  }
+
+  sb.writeln("""
+   final res = await _client!.send(request);
+   final data = await res.stream.bytesToString();
+
+return ${_typeArgs.elementAt(1).name}(
+    data: _validStatuses.contains(res.statusCode) && data.isNotEmpty ? $data : null,
+    statusCode: res.statusCode,
+    reasonPhrase: res.reasonPhrase,
+    headers: HttpHeaders.fromMap(res.headers),
+  );
+  """);
   return Code(sb.toString());
 }
 

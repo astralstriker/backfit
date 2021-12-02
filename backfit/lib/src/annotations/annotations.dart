@@ -20,7 +20,12 @@ class Query {
 @immutable
 class Path {
   final String path;
-  const Path(this.path);    
+  const Path(this.path);
+}
+
+@immutable
+class Header {
+  const Header();
 }
 
 @immutable
@@ -57,4 +62,24 @@ class Put {
 class Delete {
   final String url;
   const Delete(this.url);
+}
+
+const multiPart = Multipart();
+
+@immutable
+class Multipart {
+  const Multipart();
+}
+
+@immutable
+class PartFile {
+  final String field;
+  final String contentType;
+  const PartFile(this.field, this.contentType);
+}
+
+@immutable
+class PartField {
+  final String query;
+  const PartField(this.query);
 }

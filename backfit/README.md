@@ -1,4 +1,4 @@
-# Backfit_Generator
+# Backfit
 
 Backfit is a Retrofit inspired HTTP Client and API Service generator for Dart. This package works with its companion package called backfit.
 

@@ -1,7 +1,7 @@
-import 'package:backfit/backfit.dart';
-import 'package:source_gen/source_gen.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:backfit/backfit.dart';
 import 'package:meta/meta.dart';
+import 'package:source_gen/source_gen.dart';
 
 @immutable
 class AnnotatedParam {
@@ -20,15 +20,9 @@ class AnnotationElement {
 class AnnotationsProcessor {
   TypeChecker _typeChecker(Type t) => TypeChecker.fromRuntime(t);
 
-  final _methodAnnotations = [
-    Get,
-    Post,
-    Head,
-    Put,
-    Delete,
-  ];
+  final _methodAnnotations = [Get, Post, Head, Put, Delete, Multipart];
 
-  final _parameterTypeAnnotations = [Body, Query, Path];
+  final _parameterTypeAnnotations = [Body, Query, Path, PartFile, PartField];
 
   ConstantReader getClassAnnotation(ClassElement element) {
     final annotation = _typeChecker(BackfitService).firstAnnotationOf(element);

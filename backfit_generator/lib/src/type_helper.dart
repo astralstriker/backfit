@@ -1,6 +1,6 @@
 import 'package:analyzer/dart/element/type.dart';
-import 'package:source_gen/source_gen.dart';
 import 'package:backfit/backfit.dart';
+import 'package:source_gen/source_gen.dart';
 
 const coreIterableTypeChecker = TypeChecker.fromUrl('dart:core#Iterable');
 const coreMapTypeChecker = TypeChecker.fromUrl('dart:core#Map');
