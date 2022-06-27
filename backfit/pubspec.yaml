@@ -1,14 +1,15 @@
 name: backfit
 description: Retrofit inspired HTTP Client generator for Dart
-version: 0.0.2+3
+version: 0.0.2+8
 repository: https://github.com/astralstriker/backfit
 
 environment:
   sdk: ">=2.12.0 <3.0.0"
 
 dependencies:
-  analyzer: ^2.1.0
+  analyzer:
   built_collection: ^5.1.0
   http: ^0.13.3
+  cross_file: ^0.3.3+1
   http_parser: ^4.0.0
   meta: ^1.7.0

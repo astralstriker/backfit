@@ -28,9 +28,11 @@ mixin _$Posts implements Posts {
   ];
 
   @override
-  Future<Response<MyPost>> postsByUserId(String userId) async {
-    final res = await _client!
-        .get(Uri.parse('${_client!.baseUrl}/posts?userId=$userId'));
+  Future<Response<MyPost>> postsByUserId(
+      String userId, String contentType) async {
+    final res = await _client!.get(
+        Uri.parse('${_client!.baseUrl}/posts?userId=$userId'),
+        headers: {'content-type': contentType});
     return Response(
       data: _validStatuses.contains(res.statusCode) && res.body.isNotEmpty
           ? MyPost.fromJson(json.decode(res.body))
@@ -42,11 +44,14 @@ mixin _$Posts implements Posts {
   }
 
   @override
-  Future<Response> uploadFile(File file) async {
+  Future<Response<dynamic>> uploadFile(XFile? file) async {
     final request =
         MultipartRequest('POST', Uri.parse('${_client!.baseUrl}/photos'));
-    request.files.add(await MultipartFile.fromPath('image', file.path,
-        contentType: MediaType('media', '*')));
+    if (file != null) {
+      final bytes = await file.readAsBytes();
+      request.files.add(MultipartFile.fromBytes('image', bytes,
+          filename: file.name, contentType: MediaType('media', '*')));
+    }
     final res = await _client!.send(request);
     final data = await res.stream.bytesToString();
 

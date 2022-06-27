@@ -25,7 +25,8 @@ class Path {
 
 @immutable
 class Header {
-  const Header();
+  final String key;
+  const Header(this.key);
 }
 
 @immutable
@@ -80,6 +81,6 @@ class PartFile {
 
 @immutable
 class PartField {
-  final String query;
-  const PartField(this.query);
+  final String field;
+  const PartField(this.field);
 }

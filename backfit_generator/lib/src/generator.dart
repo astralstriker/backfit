@@ -90,7 +90,7 @@ Iterable<Method> _parseMethods(List<MethodElement> methodElements) =>
 
 Method _parseMethod(MethodElement element) => Method((b) => b
   ..name = element.name
-  ..returns = Reference(element.returnType.displayName)
+  ..returns = refer(element.returnType.getDisplayString(withNullability: true))
   ..modifier = MethodModifier.async
   ..annotations.add(refer('override'))
   ..requiredParameters.addAll(_parseRequiredParameters(element.parameters))
@@ -131,6 +131,15 @@ Code _parseBody(MethodElement element) {
   final pathParams = _annotationsProcessor.getMethodAnnotation(element, Path);
 
   final queryParams = _annotationsProcessor.getMethodAnnotation(element, Query);
+
+  final headerParams =
+      _annotationsProcessor.getMethodAnnotation(element, Header);
+
+  final hasHeaders = headerParams.isNotEmpty;
+
+  final headers = Map.fromEntries(headerParams.map((p) =>
+      MapEntry<String, String>(
+          "'${p.reader.peek('key')?.stringValue}'", '${p.element?.name}')));
 
   pathParams.forEach((p) {
     final pathId = p.reader.peek('path')?.stringValue;
@@ -203,6 +212,13 @@ Code _parseBody(MethodElement element) {
   var _postBody = (methodType == Post && shouldGenerateBody)
       ? ", body: ${bodyNeedsDeserialization ? "${bodyParams.elementAt(0).element!.name}.toJson()" : "${bodyParams.elementAt(0).element!.name}"} "
       : "";
+
+  sb.write('final res = await _client!.$method(Uri.parse(\'$url\')$_postBody');
+  if (hasHeaders) {
+    sb.write(', headers: $headers');
+  }
+  sb.write(');');
+
   if (coreIterableTypeChecker.isAssignableFromType(_retType)) {
     var data = '(json.decode(res.body) as List)';
 
@@ -217,7 +233,7 @@ Code _parseBody(MethodElement element) {
     }
 
     sb.write('''
-final res = await _client!.$method(Uri.parse(\'$url\')$_postBody);
+
 
 return ${_typeArgs.elementAt(1).name}(
     data: _validStatuses.contains(res.statusCode) && res.body.isNotEmpty ?  $data : null,
@@ -230,7 +246,7 @@ return ${_typeArgs.elementAt(1).name}(
     var data = '(json.decode(res.body) as Map)';
 
     sb.write('''
-final res = await _client!.$method(Uri.parse(\'$url\')$_postBody);
+
 return ${_typeArgs.elementAt(1).name}(
     data: _validStatuses.contains(res.statusCode) && res.body.isNotEmpty ? $data : null,
     statusCode: res.statusCode,
@@ -247,7 +263,7 @@ return ${_typeArgs.elementAt(1).name}(
     if (!type.isDynamic) data = '${type.name}.fromJson($data)';
 
     sb.write('''
-final res = await _client!.$method(Uri.parse(\'$url\')$_postBody);
+
 return ${_typeArgs.elementAt(1).name}(
     data:  _validStatuses.contains(res.statusCode) && res.body.isNotEmpty ?  $data : null,
     statusCode: res.statusCode,
@@ -261,6 +277,7 @@ return ${_typeArgs.elementAt(1).name}(
 
 Code _parseMultipart(MethodElement element) {
   final _methodAnnotation = _annotationsProcessor.getMethodAnnotations(element);
+  final emitter = DartEmitter();
 
   String url = path.url.join(
       "\${_client!.baseUrl}",
@@ -303,6 +320,7 @@ Code _parseMultipart(MethodElement element) {
   sb.write("""
     final request = MultipartRequest('POST', Uri.parse(\'$url\'));
   """);
+
   final fileParams =
       _annotationsProcessor.getMethodAnnotation(element, PartFile);
 
@@ -310,15 +328,19 @@ Code _parseMultipart(MethodElement element) {
     final field = f.reader.peek('field')?.stringValue;
     final contentType = f.reader.peek('contentType')?.stringValue.split("/");
     final filePath = f.element?.name;
+    sb.writeln("if($filePath!=null) {");
     if (f.element!.type.isDartCoreList) {
       sb.writeln("for (final _\$x in $filePath) {");
+      sb.writeln("final bytes = await _\$x.readAsBytes();");
       sb.writeln(
-          "request.files.add(await MultipartFile.fromPath('$field', _\$x.path, contentType: MediaType('${contentType![0]}', '${contentType[1]}')));");
+          "request.files.add(MultipartFile.fromBytes('$field', bytes, filename: _\$x.name, contentType: MediaType('${contentType![0]}', '${contentType[1]}')));");
       sb.writeln("}");
     } else {
+      sb.writeln("final bytes = await $filePath.readAsBytes();");
       sb.writeln(
-          "request.files.add(await MultipartFile.fromPath('$field', $filePath.path, contentType: MediaType('${contentType![0]}', '${contentType[1]}')));");
+          "request.files.add(MultipartFile.fromBytes('$field', bytes, filename: $filePath.name, contentType: MediaType('${contentType![0]}', '${contentType[1]}')));");
     }
+    sb.writeln("}");
   });
 
   final fieldParams =

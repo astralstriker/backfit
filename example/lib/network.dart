@@ -3,6 +3,7 @@ import 'package:backfit/backfit.dart';
 
 final client = BackfitClient(
     baseUrl: 'https://jsonplaceholder.typicode.com',
-    interceptors: [HttpLogger()]);
+    interceptors: [PrettyLogger()]);
+
 
 final apiService = PostsService.withClient(client);

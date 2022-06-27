@@ -20,4 +20,7 @@ abstract class Posts {
   @multiPart
   @Post('photos')
   Future<Response> uploadFiles(@PartFile('image', 'media/*') List<File> file);
+
+  @Post('posts')
+  Future<Response> addPost(@Body() MyPost post);
 }

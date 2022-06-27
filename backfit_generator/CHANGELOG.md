@@ -1,3 +1,24 @@
+
+## [0.0.2+11]
+* **[BREAKING]** Added support for Multipart requests on Web by utlizing the cross_file package.<br>This means that you need to pass XFiles instead of Files. XFiles must have the fileName attribute set.
+## [0.0.2+10] 20/06/2022
+
+* Added support for optional multipart files.
+## [0.0.2+9] 15/06/2022
+
+* Added support for Header param.
+## [0.0.2+8] 07/04/2022
+
+* Fixed PartField annotation
+
+## [0.0.2+7] 29/03/2022
+
+* Support latest analyzer
+
+## [0.0.2+6] 02/12/2021
+
+* Support for backfit - 0.0.2+4
+
 ## [0.0.2+5] 10/11/2021
 
 * Http Status Handling 200 - 206.

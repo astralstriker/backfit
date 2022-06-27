@@ -194,7 +194,17 @@ class PrettyLogger implements RequestInterceptor, ResponseInterceptor {
               header: 'Form data | ${data.contentLength}');
         }
       } else {
-        _printBlock(data.toString());
+        if (request is http.MultipartRequest) {
+          _printBlock("Files");
+          _printList(request.files.map((e) => e.filename).toList());
+          _printMapAsTable(request.fields, header: 'Fields');
+        } else if (request is http.Request) {
+          try {
+            _printMapAsTable(json.decode(request.body) as Map?, header: 'Body');
+          } catch (e) {
+            if (request is http.Request) _printBlock(request.body);
+          }
+        }
       }
     }
 
